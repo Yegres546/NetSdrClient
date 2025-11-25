@@ -112,21 +112,22 @@ public class EchoServer
     }
 }
 
-
-public class UdpTimedSender : IDisposable
+namespace EchoServerNamespace
 {
-    private readonly string _host;
-    private readonly int _port;
-    private readonly UdpClient _udpClient;
-    private Timer _timer;
-
-    public UdpTimedSender(string host, int port)
+    public class UdpTimedSender : IDisposable
     {
-        _host = host;
-        _port = port;
-        _udpClient = new UdpClient();
-    }
+        private readonly string _host;
+        private readonly int _port;
+        private readonly UdpClient _udpClient;
+        private Timer _timer;
 
+        public UdpTimedSender(string host, int port)
+        {
+            _host = host;
+            _port = port;
+            _udpClient = new UdpClient();
+        }
+    }
     public void StartSending(int intervalMilliseconds)
     {
         if (_timer != null)
