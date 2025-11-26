@@ -9,7 +9,29 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using static NetSdrClientApp.Messages.NetSdrMessageHelper;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using NetSdrClient.Models;
+using NetSdrClient.Interfaces;
 
+namespace NetSdrClient.Services
+{
+    public class SDRClient : IDeviceService
+    {
+        public List<SDRDevice> Devices { get; private set; }
+        
+        // Реалізація інтерфейсу
+        public void Connect()
+        {
+            // Connection logic
+        }
+        
+        public void Disconnect()
+        {
+            // Disconnection logic
+        }
+        
+        // Інші методи...
+    }
+}
 namespace NetSdrClientApp
 {
     public class NetSdrClient

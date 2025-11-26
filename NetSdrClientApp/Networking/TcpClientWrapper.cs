@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,15 +10,16 @@ using System.Threading.Tasks;
 
 namespace NetSdrClientApp.Networking
 {
-    public class TcpClientWrapper : ITcpClient
+    public class TcpClientWrapper : ITcpClient, IDisposable
     {
         private string _host;
         private int _port;
         private TcpClient? _tcpClient;
         private NetworkStream? _stream;
         private CancellationTokenSource _cts;
+        private bool _disposed = false;
 
-        public bool Connected => _tcpClient != null && _tcpClient.Connected && _stream != null;
+        public bool Connected => !_disposed && _tcpClient != null && _tcpClient.Connected && _stream != null;
 
         public event EventHandler<byte[]>? MessageReceived;
 
@@ -26,10 +27,13 @@ namespace NetSdrClientApp.Networking
         {
             _host = host;
             _port = port;
+            _cts = new CancellationTokenSource();
         }
 
         public void Connect()
         {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+
             if (Connected)
             {
                 Console.WriteLine($"Already connected to {_host}:{_port}");
@@ -40,7 +44,6 @@ namespace NetSdrClientApp.Networking
 
             try
             {
-                _cts = new CancellationTokenSource();
                 _tcpClient.Connect(_host, _port);
                 _stream = _tcpClient.GetStream();
                 Console.WriteLine($"Connected to {_host}:{_port}");
@@ -49,6 +52,8 @@ namespace NetSdrClientApp.Networking
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed to connect: {ex.Message}");
+                CleanupResources();
+                throw;
             }
         }
 
@@ -57,12 +62,7 @@ namespace NetSdrClientApp.Networking
             if (Connected)
             {
                 _cts?.Cancel();
-                _stream?.Close();
-                _tcpClient?.Close();
-
-                _cts = null;
-                _tcpClient = null;
-                _stream = null;
+                CleanupResources();
                 Console.WriteLine("Disconnected.");
             }
             else
@@ -73,6 +73,8 @@ namespace NetSdrClientApp.Networking
 
         public async Task SendMessageAsync(byte[] data)
         {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+
             if (Connected && _stream != null && _stream.CanWrite)
             {
                 Console.WriteLine($"Message sent: " + data.Select(b => Convert.ToString(b, toBase: 16)).Aggregate((l, r) => $"{l} {r}"));
@@ -86,6 +88,8 @@ namespace NetSdrClientApp.Networking
 
         public async Task SendMessageAsync(string str)
         {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+
             var data = Encoding.UTF8.GetBytes(str);
             if (Connected && _stream != null && _stream.CanWrite)
             {
@@ -104,7 +108,7 @@ namespace NetSdrClientApp.Networking
             {
                 try
                 {
-                    Console.WriteLine($"Starting listening for incomming messages.");
+                    Console.WriteLine($"Starting listening for incoming messages.");
 
                     while (!_cts.Token.IsCancellationRequested)
                     {
@@ -117,13 +121,16 @@ namespace NetSdrClientApp.Networking
                         }
                     }
                 }
-                catch (OperationCanceledException ex)
+                catch (OperationCanceledException)
                 {
-                    //empty
+                    // Expected when cancellation is requested
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error in listening loop: {ex.Message}");
+                    if (!_disposed)
+                    {
+                        Console.WriteLine($"Error in listening loop: {ex.Message}");
+                    }
                 }
                 finally
                 {
@@ -135,6 +142,38 @@ namespace NetSdrClientApp.Networking
                 throw new InvalidOperationException("Not connected to a server.");
             }
         }
-    }
 
+        private void CleanupResources()
+        {
+            _stream?.Close();
+            _stream?.Dispose();
+            _stream = null;
+
+            _tcpClient?.Close();
+            _tcpClient?.Dispose();
+            _tcpClient = null;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Dispose managed resources
+                    _cts?.Cancel();
+                    _cts?.Dispose();
+                    CleanupResources();
+                }
+
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+    }
 }

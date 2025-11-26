@@ -1,0 +1,3 @@
+dotnet add NetSdrClientAppTests package coverlet.msbuild
+dotnet add NetSdrClientAppTests package Microsoft.NET.Test.Sdk
+dotnet test NetSdrClientAppTests -c Release       /p:CollectCoverage=true       /p:CoverletOutput=TestResults/coverage.xml       /p:CoverletOutputFormat=opencover
