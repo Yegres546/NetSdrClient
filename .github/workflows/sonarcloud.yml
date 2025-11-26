@@ -57,3 +57,36 @@ jobs:
 
         # End SonarScanner
         dotnet sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
+name: Architecture Rules Validation
+
+on:
+  push:
+    branches: [ "lab5" ]
+  pull_request:
+    branches: [ "lab5" ]
+
+jobs:
+  architecture-tests:
+    name: Architecture Rules Validation
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x'
+        
+    - name: Install dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Run Architecture Tests
+      run: dotnet test --configuration Release --no-build --verbosity normal --filter "Category=Architecture"
+      
+    - name: Run All Tests
+      run: dotnet test --configuration Release --no-build --verbosity normal
