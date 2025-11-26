@@ -57,20 +57,20 @@ jobs:
 
         # End SonarScanner
         dotnet sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
-# name: Architecture Rules Validation
+ name: Architecture Rules Validation
 
-#on:
-#  push:
-#    branches: [ "lab5" ]
-#  pull_request:
- #   branches: [ "lab5" ]
-#
-#jobs:
- # architecture-tests:
-  #  name: Architecture Rules Validation
-   # runs-on: windows-latest
-    #
-    #steps:
+on:
+  push:
+   branches: [ "lab5" ]
+  pull_request:
+    branches: [ "lab5" ]
+
+jobs:
+  architecture-tests:
+    name: Architecture Rules Validation
+    runs-on: windows-latest
+    
+    steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
