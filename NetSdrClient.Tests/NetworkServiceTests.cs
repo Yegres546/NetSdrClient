@@ -1,75 +1,41 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NetSdrClient.Services;
+using NetSdrClientApp;
+using NetSdrClientApp.Models;
 
-namespace NetSdrClient.Tests
+namespace NetSdrClientAppTests
 {
     [TestClass]
-    public class NetworkServiceTests
+    public class NetSdrClientTests
     {
         [TestMethod]
-        public void NetworkService_Constructor_ShouldInitialize()
+        public void NetSdrClient_AddDevice_ShouldAddDeviceToList()
         {
-            // Arrange & Act
-            var service = new NetworkService();
+            // Arrange
+            var client = new NetSdrClient();
+            var device = new SDRDevice { Id = 1, Name = "Test Device" };
+
+            // Act
+            client.AddDevice(device);
 
             // Assert
-            Assert.IsNotNull(service);
+            Assert.AreEqual(1, client.Devices.Count);
+            Assert.AreEqual("Test Device", client.Devices[0].Name);
         }
 
         [TestMethod]
-        public void IsValidIpAddress_WithValidIp_ShouldReturnTrue()
+        public void NetSdrClient_RemoveDevice_ShouldRemoveDevice()
         {
             // Arrange
-            var service = new NetworkService();
-            var validIp = "192.168.1.1";
+            var client = new NetSdrClient();
+            var device = new SDRDevice { Id = 1, Name = "Test Device" };
+            client.AddDevice(device);
 
             // Act
-            var result = service.IsValidIpAddress(validIp);
+            var result = client.RemoveDevice(1);
 
             // Assert
             Assert.IsTrue(result);
-        }
-
-        [TestMethod]
-        public void IsValidIpAddress_WithInvalidIp_ShouldReturnFalse()
-        {
-            // Arrange
-            var service = new NetworkService();
-            var invalidIp = "999.999.999.999";
-
-            // Act
-            var result = service.IsValidIpAddress(invalidIp);
-
-            // Assert
-            Assert.IsFalse(result);
-        }
-
-        [TestMethod]
-        public void IsValidPort_WithValidPort_ShouldReturnTrue()
-        {
-            // Arrange
-            var service = new NetworkService();
-            var validPort = 8080;
-
-            // Act
-            var result = service.IsValidPort(validPort);
-
-            // Assert
-            Assert.IsTrue(result);
-        }
-
-        [TestMethod]
-        public void IsValidPort_WithInvalidPort_ShouldReturnFalse()
-        {
-            // Arrange
-            var service = new NetworkService();
-            var invalidPort = 99999;
-
-            // Act
-            var result = service.IsValidPort(invalidPort);
-
-            // Assert
-            Assert.IsFalse(result);
+            Assert.AreEqual(0, client.Devices.Count);
         }
     }
 }
